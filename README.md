@@ -1,110 +1,121 @@
-# Alogram Payrisk Kotlin SDK
+# Alogram PayRisk SDK for Kotlin
 
-The official Kotlin client for the **Alogram Payments Risk API**. This SDK provides a robust, "smart" interface for checking fraud risk, ingesting behavioral signals, and managing payment lifecycle events, optimized for **Kotlin Coroutines**.
+[![Maven Central](https://img.shields.io/maven-central/v/com.alogram/alogram-payrisk-kotlin.svg)](https://search.maven.org/artifact/com.alogram/alogram-payrisk-kotlin)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-**Key Features:**
-*   **Coroutines Native:** Fully asynchronous API using `suspend` functions.
-*   **Resilient:** Built-in exponential backoff retries.
-*   **Traceable:** Automatic injection of `x-trace-id` and `x-idempotency-key`.
-*   **Observable:** First-class support for **OpenTelemetry** spans and attributes.
-*   **Type-Safe:** Fully typed request/response models using Moshi.
-*   **Secure:** Built-in webhook signature verification.
+The official Alogram PayRisk 'Smart' SDK for Kotlin. Engineered for modern, asynchronous financial systems using **Kotlin Coroutines**, native resiliency, and deep observability.
 
----
+## 🚀 Features
 
-## 🏗️ Installation
+-   **🏢 Coroutine-Native Architecture**: All API calls are `suspend` functions optimized for high-concurrency environments.
+-   **🏢 Smart Client Architecture**: Specialized clients for server-side (`AlogramRiskClient`) and mobile (`AlogramPublicClient`).
+-   **🛡️ Automated Identity**: Thread-safe injection of `x-api-key`, `Authorization`, and tenant headers.
+-   **🔄 Built-in Resiliency**: Transparent exponential backoff and jittered retries (3 retries on 429/5xx).
+-   **🕵️ OpenTelemetry Native**: Tracing support that propagates across coroutine contexts.
 
-### Gradle (Kotlin)
-```kotlin
-implementation("com.alogram:alogram-payrisk-kotlin:0.1.0")
-```
-
-### Maven
-```xml
-<dependency>
-    <groupId>com.alogram</groupId>
-    <artifactId>alogram-payrisk-kotlin</artifactId>
-    <version>0.1.0</version>
-</dependency>
-```
-
----
-
-## 🚀 Quickstart
-
-### 1. Initialize the Client
+## 📦 Installation
 
 ```kotlin
-import com.alogram.payrisk.AlogramRiskClient
+implementation("com.alogram:alogram-payrisk-kotlin:0.1.6-rc.3")
+```
 
+## 🛠️ Quick Start
+
+### Evaluate Risk (Server-Side)
+
+```kotlin
 val client = AlogramRiskClient.Builder()
-    .baseUrl("https://api.alogram.ai")
-    .apiKey("sk_live_...")
-    .tenantId("your_tenant_id")
+    .apiKey("sk_live_your_secret_key")
     .build()
+
+// Call inside a coroutine
+val decision = client.checkRisk(CheckRequest(
+    purchase = Purchase(amount = 99.99, currency = "USD")
+))
+
+println("Decision: ${decision.decision}")
 ```
 
-### 2. Check Risk (Inside a Coroutine)
+---
+
+## 🛡️ Error Handling
+
+Catch specific exceptions within your coroutine scope:
 
 ```kotlin
-import com.alogram.payrisk.v1.models.*
-import kotlinx.coroutines.runBlocking
+import com.alogram.payrisk.exceptions.*
 
-fun main() = runBlocking {
-    val request = CheckRequest(
-        entities = EntityIds(tenantId = "tenant_123"),
-        purchase = Purchase(
-            amount = 99.00f, 
-            currency = "USD", 
-            paymentMethod = PaymentMethod(card = Card(type = "card", bin = "424242"))
-        )
-    )
-
-    try {
-        val response = client.checkRisk(request)
-        println("Decision: ${response.decision}")
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
+try {
+    val res = client.checkRisk(request)
+} catch (e: RateLimitException) {
+    // 🔄 Standard retries are automatic, but you can log here
+} catch (e: ValidationException) {
+    // ❌ Handle invalid input data
+    println(e.statusCode)
+} catch (e: AlogramException) {
+    // 🚨 Generic SDK error
 }
 ```
 
+## 🔑 Authentication & Keys
+
+Obtain your keys from the [Alogram Dashboard](https://dashboard.alogram.ai/keys).
+
+| Key Type | Prefix | Client | Use Case |
+| :--- | :--- | :--- | :--- |
+| **Secret Key** | `sk_live_...` | `AlogramRiskClient` | Server-side risk checks. **Never expose.** |
+| **Publishable Key** | `pk_live_...` | `AlogramPublicClient` | Mobile/Frontend signals. |
+
+## 🤖 For AI Agents (Integration Context)
+
+If you are using an AI agent (like ChatGPT, Claude, or Gemini), provide this context:
+
+> "I am integrating the Alogram PayRisk Kotlin SDK. I need to call `checkRisk` using coroutines. Use the `AlogramRiskClient` Builder, handle `RateLimitException` gracefully, and ensure you use the `idempotencyKey` parameter."
+
 ---
 
-## 📊 Observability (OpenTelemetry)
+## 🧪 Local Testing & Mocking
 
-The SDK uses the standard OpenTelemetry Java/Kotlin API. It will automatically detect and use the `GlobalOpenTelemetry` instance.
-
-**Captured Attributes:**
-*   `alogram.idempotency_key`
-*   `alogram.trace_id`
-*   `alogram.decision`
-
----
-
-## 🛡️ Webhook Security
-
-Verify incoming webhooks using the built-in `WebhookVerifier`.
+Use the coroutine-optimized `MockRiskClient` for your test suite:
 
 ```kotlin
-import com.alogram.payrisk.WebhookVerifier
+val mock = MockRiskClient()
+mock.queueDecision("decline", 0.95, "high_risk_ip")
 
-val isValid = WebhookVerifier.verify(payloadBytes, signatureHeader, webhookSecret)
+val decision = myApp.process(mock) // Mock supports 'suspend' calls
+println(decision.decision) // "decline"
+```
+
+## 🏗️ Environment Testing
+
+### Alogram Sandbox
+For safe integration testing, point your client to the Sandbox environment:
+```kotlin
+val client = AlogramRiskClient.Builder()
+    .apiKey("sk_test_...")
+    .baseUrl("https://api-sandbox.alogram.ai")
+    .build()
+```
+
+### Local Emulator
+For hermetic local testing, run the **Alogram Local Emulator**:
+```bash
+docker run -p 8080:8080 alogram/payrisk-emulator
+```
+Point your client to the local instance:
+```kotlin
+val client = AlogramRiskClient.Builder()
+    .baseUrl("http://localhost:8080")
+    .apiKey("test")
+    .build()
 ```
 
 ---
 
-## ⚠️ Error Handling
+## 📚 Documentation
 
-| Exception | Description |
-| :--- | :--- |
-| `AuthenticationException` | Invalid API Key or Permissions. |
-| `ValidationException` | Invalid request body or missing fields. |
-| `RateLimitException` | Too many requests. **Automatically Retried.** |
-| `InternalServerException` | Server-side issues. **Automatically Retried.** |
+For the full API reference, visit [docs.alogram.ai](https://docs.alogram.ai).
 
----
+## ⚖️ License
 
-## 📦 License
-
-Apache 2.0
+Apache License 2.0. See [LICENSE](LICENSE) for details.
