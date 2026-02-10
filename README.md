@@ -16,7 +16,7 @@ The official Kotlin client for the **Alogram Payments Risk API**. This SDK provi
 
 ### Gradle (Kotlin)
 ```kotlin
-implementation("com.alogram:alogram-payrisk-kotlin:0.1.0")
+implementation("com.alogram:alogram-payrisk-kotlin:0.1.6-rc.2")
 ```
 
 ### Maven
@@ -24,7 +24,7 @@ implementation("com.alogram:alogram-payrisk-kotlin:0.1.0")
 <dependency>
     <groupId>com.alogram</groupId>
     <artifactId>alogram-payrisk-kotlin</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.6-rc.2</version>
 </dependency>
 ```
 
