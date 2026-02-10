@@ -12,6 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.openapitools.client.infrastructure.ApiClient
 import retrofit2.Response
+import retrofit2.awaitResponse
 import java.util.UUID
 import java.util.logging.Logger
 import okhttp3.Interceptor
@@ -106,12 +107,12 @@ class AlogramRiskClient private constructor(apiClient: ApiClient, api: PayriskAp
             var lastException: Exception? = null
             for (attempt in 1..3) {
                 try {
-                    val response = withContext(Dispatchers.IO) {
-                        api.riskCheck(ik, request, tid).execute()
-                    }
+                    val call: retrofit2.Call<DecisionResponse> = api.riskCheck(ik, request, tid)
+                    val response: retrofit2.Response<DecisionResponse> = call.awaitResponse()
+                    
                     if (response.isSuccessful) {
                         span.setStatus(StatusCode.OK)
-                        val body = response.body()!!
+                        val body = response.body() ?: throw AlogramException("Empty response body", response.code())
                         span.setAttribute("alogram.decision", body.decision.value)
                         return body
                     } else {
@@ -124,7 +125,9 @@ class AlogramRiskClient private constructor(apiClient: ApiClient, api: PayriskAp
                     if (attempt == 3) throw e
                     lastException = e
                 }
-                delay(Math.pow(2.0, (attempt - 1).toDouble()).toLong() * 1000)
+                val baseDelay = Math.pow(2.0, (attempt - 1).toDouble()).toLong() * 1000
+                val jitter = (Math.random() * (baseDelay * 0.2)).toLong()
+                delay(baseDelay + jitter)
             }
             throw lastException!!
         } catch (e: Exception) {
@@ -149,9 +152,7 @@ class AlogramRiskClient private constructor(apiClient: ApiClient, api: PayriskAp
             var lastException: Exception? = null
             for (attempt in 1..3) {
                 try {
-                    val response = withContext(Dispatchers.IO) {
-                        api.ingestSignals(ik, request, tid).execute()
-                    }
+                    val response = api.ingestSignals(ik, request, tid).awaitResponse()
                     if (response.isSuccessful) {
                         span.setStatus(StatusCode.OK)
                         return
@@ -165,7 +166,9 @@ class AlogramRiskClient private constructor(apiClient: ApiClient, api: PayriskAp
                     if (attempt == 3) throw e
                     lastException = e
                 }
-                delay(Math.pow(2.0, (attempt - 1).toDouble()).toLong() * 1000)
+                val baseDelay = Math.pow(2.0, (attempt - 1).toDouble()).toLong() * 1000
+                val jitter = (Math.random() * (baseDelay * 0.2)).toLong()
+                delay(baseDelay + jitter)
             }
             throw lastException!!
         } catch (e: Exception) {
@@ -190,9 +193,7 @@ class AlogramRiskClient private constructor(apiClient: ApiClient, api: PayriskAp
             var lastException: Exception? = null
             for (attempt in 1..3) {
                 try {
-                    val response = withContext(Dispatchers.IO) {
-                        api.ingestPaymentEvent(ik, event, tid).execute()
-                    }
+                    val response = api.ingestPaymentEvent(ik, event, tid).awaitResponse()
                     if (response.isSuccessful) {
                         span.setStatus(StatusCode.OK)
                         return
@@ -206,7 +207,9 @@ class AlogramRiskClient private constructor(apiClient: ApiClient, api: PayriskAp
                     if (attempt == 3) throw e
                     lastException = e
                 }
-                delay(Math.pow(2.0, (attempt - 1).toDouble()).toLong() * 1000)
+                val baseDelay = Math.pow(2.0, (attempt - 1).toDouble()).toLong() * 1000
+                val jitter = (Math.random() * (baseDelay * 0.2)).toLong()
+                delay(baseDelay + jitter)
             }
             throw lastException!!
         } catch (e: Exception) {
@@ -237,7 +240,7 @@ class AlogramPublicClient private constructor(apiClient: ApiClient, api: Payrisk
 
         fun build(): AlogramPublicClient {
             if (options.apiKey?.startsWith("sk_") == true) {
-                throw ScopedAccessError("Cannot initialize AlogramPublicClient with a Secret Key (sk_...). Please use AlogramRiskClient.")
+                throw ScopedAccessError("Cannot initialize AlogramPublicClient with a Secret Key (sk_...). Please use AlogramRiskClient for server-side operations.")
             }
             
             val headerInterceptor = Interceptor { chain ->
@@ -270,9 +273,7 @@ class AlogramPublicClient private constructor(apiClient: ApiClient, api: Payrisk
             var lastException: Exception? = null
             for (attempt in 1..3) {
                 try {
-                    val response = withContext(Dispatchers.IO) {
-                        api.ingestSignals(ik, request, tid).execute()
-                    }
+                    val response = api.ingestSignals(ik, request, tid).awaitResponse()
                     if (response.isSuccessful) {
                         span.setStatus(StatusCode.OK)
                         return
@@ -286,7 +287,9 @@ class AlogramPublicClient private constructor(apiClient: ApiClient, api: Payrisk
                     if (attempt == 3) throw e
                     lastException = e
                 }
-                delay(Math.pow(2.0, (attempt - 1).toDouble()).toLong() * 1000)
+                val baseDelay = Math.pow(2.0, (attempt - 1).toDouble()).toLong() * 1000
+                val jitter = (Math.random() * (baseDelay * 0.2)).toLong()
+                delay(baseDelay + jitter)
             }
             throw lastException!!
         } catch (e: Exception) {
