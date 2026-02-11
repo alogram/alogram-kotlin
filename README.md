@@ -16,7 +16,7 @@ The official Alogram PayRisk 'Smart' SDK for Kotlin. Engineered for modern, asyn
 ## 📦 Installation
 
 ```kotlin
-implementation("com.alogram:alogram-payrisk-kotlin:0.1.6-rc.3")
+implementation("com.alogram:alogram-payrisk-kotlin:0.1.6-rc.8")
 ```
 
 ## 🛠️ Quick Start
