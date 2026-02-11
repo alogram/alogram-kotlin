@@ -1,5 +1,5 @@
 group 'com.alogram'
-version '0.1.6-rc.8'
+version = '0.1.6-rc.14'
 wrapper {
     gradleVersion = '8.7'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
@@ -37,7 +37,7 @@ apply plugin: 'com.diffplug.spotless'
 apply plugin: 'org.jetbrains.dokka'
 
 group 'com.alogram'
-version '0.1.6-rc.8'
+version = '0.1.6-rc.14'
 
 tasks.register("dokkaJar", Jar) {
     from tasks.dokkaHtml
@@ -183,13 +183,28 @@ publishing {
       artifact tasks.findByName("dokkaJar")
 
       pom {
-        name = "alogram-payrisk-kotlin"
-        description = "Alogram Payrisk Kotlin SDK"
+        name = "Alogram Payrisk Kotlin SDK"
+        description = "The official Kotlin client for the Alogram Payments Risk API."
+        url = "https://www.alogram.ai"
         licenses {
           license {
             name = "The Apache License, Version 2.0"
             url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
           }
+        }
+        developers {
+          developer {
+            id = "alogram"
+            name = "Alogram Inc."
+            email = "support@alogram.ai"
+            organization = "Alogram Inc."
+            organizationUrl = "https://www.alogram.ai"
+          }
+        }
+        scm {
+          connection = "scm:git:git@github.com:alogram/alogram-kotlin.git"
+          developerConnection = "scm:git:git@github.com:alogram/alogram-kotlin.git"
+          url = "https://github.com/alogram/alogram-kotlin"
         }
       }
     }
