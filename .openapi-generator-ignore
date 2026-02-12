@@ -1,0 +1,8 @@
+org.openapitools.client.infrastructure.*
+.gitlab*
+.travis*
+git_push.sh
+tox.ini
+coverage.xml
+.github/**
+.openapi-generator-ignore
