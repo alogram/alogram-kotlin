@@ -3,42 +3,55 @@
 [![Maven Central](https://img.shields.io/maven-central/v/com.alogram/alogram-payrisk-kotlin.svg)](https://search.maven.org/artifact/com.alogram/alogram-payrisk-kotlin)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-The official Alogram PayRisk 'Smart' SDK for Kotlin. Engineered for modern, asynchronous financial systems using **Kotlin Coroutines**, native resiliency, and deep observability.
+The official Kotlin client for the **Alogram PayRisk Engine**. 
+
+Alogram PayRisk is a decision management and risk orchestration engine for global commerce. It fuses machine learning, behavioral analytics, and deterministic business rules into a high-fidelity scoring pipeline designed for enterprise scale and auditability.
+
+## 🧠 The Three-Expert Architecture
+
+The SDK provides unified access to three specialized risk experts:
+
+-   **Risk Scoring**: Real-time assessment and decision orchestration for purchases.
+-   **Signal Intelligence**: Ingestion of behavioral telemetry and payment lifecycle events.
+-   **Forensic Data**: Deep visibility into historical assessments and decision transparency.
 
 ## 🚀 Features
 
--   **🏢 Coroutine-Native Architecture**: All API calls are `suspend` functions optimized for high-concurrency environments.
+-   **🏢 Coroutine-Native**: All API calls are `suspend` functions optimized for non-blocking financial systems.
 -   **🏢 Smart Client Architecture**: Specialized clients for server-side (`AlogramRiskClient`) and mobile (`AlogramPublicClient`).
 -   **🛡️ Automated Identity**: Thread-safe injection of `x-api-key`, `Authorization`, and tenant headers.
--   **🔄 Built-in Resiliency**: Transparent exponential backoff and jittered retries (3 retries on 429/5xx).
--   **🕵️ OpenTelemetry Native**: Tracing support that propagates across coroutine contexts.
+-   **🔄 Built-in Resiliency**: Automatic exponential backoff and jittered retries (3 retries on 429/5xx).
+-   **🕵️ Native Observability**: Tracing support that propagates across coroutine contexts via OpenTelemetry.
 
 ## 📦 Installation
 
 ```kotlin
-implementation("com.alogram:alogram-payrisk-kotlin:0.1.6-rc.8")
+implementation("com.alogram:alogram-payrisk-kotlin:0.2.5")
 ```
 
 ## 🛠️ Quick Start
 
-### Evaluate Risk (Server-Side)
+### Evaluate Risk (Risk Scoring Expert)
+
+Assess a purchase in real-time. This invokes the authoritative scoring pipeline.
 
 ```kotlin
 val client = AlogramRiskClient.Builder()
-    .apiKey("sk_live_your_secret_key")
+    .apiKey("sk_live_...")
     .build()
 
-// Call inside a coroutine
+// Call inside a coroutine scope
 val decision = client.checkRisk(CheckRequest(
     purchase = Purchase(amount = 99.99, currency = "USD")
 ))
 
 println("Decision: ${decision.decision}")
+println("Score: ${decision.decisionScore}")
 ```
 
 ---
 
-## 🛡️ Error Handling
+## 🛡️ Error Handling & Resiliency
 
 Catch specific exceptions within your coroutine scope:
 
@@ -47,74 +60,43 @@ import com.alogram.payrisk.exceptions.*
 
 try {
     val res = client.checkRisk(request)
-} catch (e: RateLimitException) {
-    // 🔄 Standard retries are automatic, but you can log here
 } catch (e: ValidationException) {
     // ❌ Handle invalid input data
-    println(e.statusCode)
+    println("Validation Failed: ${e.statusCode}")
 } catch (e: AlogramException) {
-    // 🚨 Generic SDK error
+    // 🚨 Handle generic API or Auth errors
 }
 ```
 
-## 🔑 Authentication & Keys
+## 🕵️ Observability (OpenTelemetry)
 
-Obtain your keys from the [Alogram Dashboard](https://dashboard.alogram.ai/keys).
+The SDK automatically propagates tracing context across coroutines.
 
-| Key Type | Prefix | Client | Use Case |
-| :--- | :--- | :--- | :--- |
-| **Secret Key** | `sk_live_...` | `AlogramRiskClient` | Server-side risk checks. **Never expose.** |
-| **Publishable Key** | `pk_live_...` | `AlogramPublicClient` | Mobile/Frontend signals. |
+```kotlin
+import io.opentelemetry.api.trace.Span
 
-## 🤖 For AI Agents (Integration Context)
+// Spans will automatically include 'alogram.decision' and 'alogram.trace_id'
+launch(Dispatchers.IO) {
+    val decision = client.checkRisk(request)
+}
+```
 
-If you are using an AI agent (like ChatGPT, Claude, or Gemini), provide this context:
+## 🏗️ Environments
 
-> "I am integrating the Alogram PayRisk Kotlin SDK. I need to call `checkRisk` using coroutines. Use the `AlogramRiskClient` Builder, handle `RateLimitException` gracefully, and ensure you use the `idempotencyKey` parameter."
+| Environment | Base URL | Key Type |
+| :--- | :--- | :--- |
+| **Production** | `https://api.alogram.ai` | `sk_live_...` |
+| **Sandbox** | `https://api-sandbox.alogram.ai` | `sk_test_...` |
+| **Local** | `http://localhost:8080` | `test` |
 
 ---
 
-## 🧪 Local Testing & Mocking
+## 🤖 For AI Agents
 
-Use the coroutine-optimized `MockRiskClient` for your test suite:
-
-```kotlin
-val mock = MockRiskClient()
-mock.queueDecision("decline", 0.95, "high_risk_ip")
-
-val decision = myApp.process(mock) // Mock supports 'suspend' calls
-println(decision.decision) // "decline"
-```
-
-## 🏗️ Environment Testing
-
-### Alogram Sandbox
-For safe integration testing, point your client to the Sandbox environment:
-```kotlin
-val client = AlogramRiskClient.Builder()
-    .apiKey("sk_test_...")
-    .baseUrl("https://api-sandbox.alogram.ai")
-    .build()
-```
-
-### Local Emulator
-For hermetic local testing, run the **Alogram Local Emulator**:
-```bash
-docker run -p 8080:8080 alogram/payrisk-emulator
-```
-Point your client to the local instance:
-```kotlin
-val client = AlogramRiskClient.Builder()
-    .baseUrl("http://localhost:8080")
-    .apiKey("test")
-    .build()
-```
+If using an AI agent (ChatGPT, Claude, Gemini) for integration, provide this context:
+> "Use the Alogram PayRisk Kotlin SDK. Always prefer the `AlogramRiskClient` for backend operations. Utilize `suspend` functions for all network calls. Access the authoritative blended score via the `decisionScore` property of the response."
 
 ---
-
-## 📚 Documentation
-
-For the full API reference, visit [docs.alogram.ai](https://docs.alogram.ai).
 
 ## ⚖️ License
 
