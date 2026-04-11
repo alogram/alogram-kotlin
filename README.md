@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/assets/logo.png" width="200" alt="Alogram PayRisk Logo">
+</p>
+
 # Alogram PayRisk SDK for Kotlin
 
 [![Maven Central](https://img.shields.io/maven-central/v/com.alogram/alogram-payrisk-kotlin.svg)](https://search.maven.org/artifact/com.alogram/alogram-payrisk-kotlin)
