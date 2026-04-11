@@ -1,9 +1,9 @@
 {
   "sdk": "kotlin",
   "version": "0.2.8",
-  "monorepo_commit": "33777f63751ab7a5f5296a45f43d1bd597ee3dcc",
+  "monorepo_commit": "808633b57cf4d6daa5ce4b1dde97ba4e605bf21b",
   "openapi_path": "apis/payrisk-v1/openapi-shared.yaml",
   "openapi_commit": "",
   "generator": "openapi-generator-cli@7.10.0",
-  "built_at": "2026-04-11T19:42:02Z"
+  "built_at": "2026-04-11T21:14:21Z"
 }
