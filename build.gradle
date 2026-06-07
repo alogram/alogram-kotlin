@@ -1,5 +1,5 @@
 group 'com.alogram'
-version = '0.2.23'
+version = '0.3.0'
 wrapper {
     gradleVersion = '8.7'
     distributionUrl = "https://services.gradle.org/distributions/gradle-${gradleVersion}-all.zip"
@@ -37,7 +37,7 @@ apply plugin: 'com.diffplug.spotless'
 apply plugin: 'org.jetbrains.dokka'
 
 group 'com.alogram'
-version = '0.2.23'
+version = '0.3.0'
 
 tasks.register("dokkaJar", Jar) {
     from tasks.dokkaHtml
